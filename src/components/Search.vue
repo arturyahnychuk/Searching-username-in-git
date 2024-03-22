@@ -9,30 +9,42 @@
 
 <script lang="ts" setup>
 import { ref } from "vue";
+import animateOnError from "../utils/animateOnError";
 
 let userData: Object;
+let userReposData: Object;
+
+type errorMessage = "An error occurred!" | "Type the user!";
 
 import searchIcon from "../assets/search-icon.svg";
 import axios from "../services/axios";
 
 const inputText = ref("");
+const searchErrorOccurred = ref(false);
 const githubUsernameRegex = /^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/i;
+const errorMessage: Ref<errorMessage> = ref("An error occurred!");
 
 const makeRequest = async () => {
     inputText.value = inputText.value.trim();
 
     if(inputText.value === "") {
-        alert("please input the username")
+        animateOnError();
+        errorMessage.value = "Type the user!";
+        searchErrorOccurred.value = true;
     } else {
         if (inputText.value.match(githubUsernameRegex)) {
             try {
                 userData = await axios.get(inputText.value);
-                console.log(userData)
+                userReposData = await axios.get(`${inputText.value}/repos`);
+                console.log(userData);
+                searchErrorOccurred.value = false;
             } catch (error) {
-                console.error(error)
+                console.error(error);
+                errorMessage.value = "An error occurred!";
+                searchErrorOccurred.value = true;
             }
         } else {
-            console.error(error)
+            console.error(error);
         }
     }
 }
